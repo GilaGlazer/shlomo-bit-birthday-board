@@ -1,0 +1,70 @@
+name: birthday-board-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: birthday-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: birthday
+      POSTGRES_PASSWORD: birthday_pass
+      POSTGRES_DB: birthday_board
+      TZ: Asia/Jerusalem
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U birthday -d birthday_board']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: birthday-backend-dev
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      TZ: Asia/Jerusalem
+      DATABASE_URL: postgresql://birthday:birthday_pass@db:5432/birthday_board
+      JWT_SECRET: dev-secret
+      JWT_EXPIRES_IN: 7d
+      BCRYPT_SALT_ROUNDS: 10
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./backend/src:/app/src
+    develop:
+      watch:
+        - action: rebuild
+          path: ./backend/package.json
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: birthday-frontend-dev
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./frontend/src:/app/src
+    develop:
+      watch:
+        - action: rebuild
+          path: ./frontend/package.json
+
+volumes:
+  postgres_data_dev:

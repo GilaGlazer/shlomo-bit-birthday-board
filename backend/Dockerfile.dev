@@ -1,0 +1,26 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache ca-certificates openssl
+
+ADD https://netfree.link/cacert/united/x2/unix.sh /home/netfree-unix-ca.sh
+RUN cat /home/netfree-unix-ca.sh | sh
+ENV NODE_EXTRA_CA_CERTS=/etc/ca-bundle.crt
+RUN npm config set cafile /etc/ca-bundle.crt
+
+COPY package*.json ./
+RUN npm install
+
+COPY prisma ./prisma/
+RUN NODE_TLS_REJECT_UNAUTHORIZED=0 npx prisma generate
+
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
+
+COPY . .
+
+EXPOSE 3000
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["npm", "run", "dev"]
