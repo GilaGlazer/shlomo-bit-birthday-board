@@ -84,10 +84,17 @@ No `.env` file to create, no flags needed. On first run this will:
 
 This takes 1–3 minutes on first run (subsequent runs are seconds, since images are cached).
 
-**3. Wait for this line in the terminal:**
+**3. Wait for the backend to finish setting up.**
+
+The frontend's Nginx server starts almost instantly, so you'll see this early:
 ```
 birthday-frontend  |   Birthday Board is ready!
 birthday-frontend  |   Open http://localhost:5173
+```
+That line only means the frontend is serving files — it does **not** mean the app is usable yet. The backend still needs to push the database schema and seed demo data first. Wait for this line before opening the app, or login/data requests will fail:
+```
+birthday-backend   | 🚀 Server running on port 3000 [production]
+birthday-backend   | 📡 Health: http://localhost:3000/api/health
 ```
 
 **4. Open the app:**
