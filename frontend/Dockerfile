@@ -4,13 +4,6 @@ WORKDIR /app
 
 RUN apk add --no-cache ca-certificates
 
-# --- NETFREE CERT INSTALL ---
-ADD https://netfree.link/cacert/united/x2/unix.sh /home/netfree-unix-ca.sh
-RUN cat /home/netfree-unix-ca.sh | sh
-ENV NODE_EXTRA_CA_CERTS=/etc/ca-bundle.crt
-RUN npm config set cafile /etc/ca-bundle.crt
-# --- END NETFREE CERT INSTALL ---
-
 COPY package*.json ./
 RUN npm install
 
