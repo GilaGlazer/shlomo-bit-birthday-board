@@ -34,6 +34,18 @@ jobs:
       - name: Check frontend is serving
         run: curl -sf http://localhost:5173/ > /dev/null
 
+      - name: Login as demo user and call an authenticated endpoint
+        run: |
+          curl -sf -c cookies.txt -X POST http://localhost:3000/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"demo@birthday.com","password":"password123"}' > login_response.json
+          cat login_response.json
+          grep -q '"email":"demo@birthday.com"' login_response.json
+
+          curl -sf -b cookies.txt http://localhost:3000/api/people/today > today_response.json
+          cat today_response.json
+          grep -q '"success":true' today_response.json
+
       - name: Dump logs (always, for visibility)
         if: always()
         run: docker compose logs
